@@ -1,0 +1,11 @@
+01
+https://www.youtube.com/watch?v=71CEj4gKDnE
+
+02
+https://www.redblobgames.com/pathfinding/grids/algorithms.html
+
+03
+https://www.heyes-jones.com/astar.php
+
+04
+https://github.com/justinhj/astar-algorithm-cpp
