@@ -23,3 +23,20 @@ void GridMap::toggleBlocked(Cell c) {
     blocked_[i] = !blocked_[i];
 }
 
+std::vector<Cell> GridMap::neighbors4(Cell c) const {
+    std::vector<Cell> out;
+    out.reserve(4);
+
+    const Cell cand[4] = {
+        {c.x + 1, c.y},
+        {c.x - 1, c.y},
+        {c.x, c.y + 1},
+        {c.x, c.y - 1}
+    };
+
+    for (Cell n : cand) {
+        if (isWalkable(n)) out.push_back(n);
+    }
+
+    return out;
+}

@@ -1,6 +1,8 @@
 #ifndef GRIDMAP_H
 #define GRIDMAP_H
+
 #pragma once
+
 #include "Types.h"
 #include <vector>
 
@@ -18,6 +20,9 @@ public:
     void setBlocked(Cell c, bool blocked);
     void toggleBlocked(Cell c);
 
+    // Para o A*: retorna os vizinhos em 4 direções (apenas walkable)
+    std::vector<Cell> neighbors4(Cell c) const;
+
 private:
     int w_{};
     int h_{};
@@ -26,4 +31,4 @@ private:
     int idx(Cell c) const { return c.y * w_ + c.x; }
 };
 
-#endif //GRIDMAP_H
+#endif // GRIDMAP_H
