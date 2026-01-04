@@ -1,34 +1,53 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
-#include "taikutsu/core/GridMap.h"
+#include <string>
 
-static std::optional<Cell> mouseToCell(const sf::RenderWindow& window, int cellSize, const GridMap& grid) {
+#include "taikutsu/core/GridMap.h"
+#include "taikutsu/core/AStar.h"
+
+// Opção A: constante única (evita o warning do CLion)
+constexpr int kCellSize = 25;
+
+static std::optional<Cell> mouseToCell(const sf::RenderWindow& window,
+                                       const GridMap& grid) {
     const auto m = sf::Mouse::getPosition(window);
     if (m.x < 0 || m.y < 0) return std::nullopt;
 
-    Cell c{ m.x / cellSize, m.y / cellSize };
+    Cell c{ m.x / kCellSize, m.y / kCellSize };
     if (!grid.inBounds(c)) return std::nullopt;
     return c;
 }
 
+static void setTitle(sf::RenderWindow& window, const std::string& status) {
+    window.setTitle("Taikutsu - A* | " + status);
+}
+
 int main() {
-    constexpr int cellSize = 25;
     constexpr int gridW = 30;
     constexpr int gridH = 20;
 
-    sf::RenderWindow window(sf::VideoMode(gridW * cellSize, gridH * cellSize), "Taikutsu - Grid");
+    sf::RenderWindow window(
+        sf::VideoMode(gridW * kCellSize, gridH * kCellSize),
+        "Taikutsu - A*"
+    );
     window.setFramerateLimit(60);
 
     GridMap grid(gridW, gridH);
     std::optional<Cell> start;
     std::optional<Cell> goal;
 
-    sf::RectangleShape cellShape(sf::Vector2f(static_cast<float>(cellSize - 1),
-                                              static_cast<float>(cellSize - 1)));
+    std::optional<AStarResult> last;
+
+    sf::RectangleShape cellShape(
+        sf::Vector2f(static_cast<float>(kCellSize - 1),
+                     static_cast<float>(kCellSize - 1))
+    );
+
+    setTitle(window, "LMB obstacle | S start | G goal | Space run | R clear result | C clear grid");
 
     while (window.isOpen()) {
-        // célula sob o mouse (para hover e comandos S/G)
-        const auto hovered = mouseToCell(window, cellSize, grid);
+        // célula sob o mouse (hover + comandos S/G)
+        const auto hovered = mouseToCell(window, grid);
 
         sf::Event event{};
         while (window.pollEvent(event)) {
@@ -38,51 +57,118 @@ int main() {
             if (event.type == sf::Event::MouseButtonPressed &&
                 event.mouseButton.button == sf::Mouse::Left) {
                 if (hovered) {
-                    // não deixa bloquear start/goal por acidente (opcional, mas evita confusão)
-                    if ((!start || *hovered != *start) && (!goal || *hovered != *goal)) {
+                    // não deixa bloquear start/goal por acidente
+                    if ((!start || !(*hovered == *start)) &&
+                        (!goal  || !(*hovered == *goal))) {
                         grid.toggleBlocked(*hovered);
+                        last.reset(); // mapa mudou => invalida resultado antigo
                     }
                 }
             }
 
-            // Teclas S/G: set start/goal
+            // Teclas
             if (event.type == sf::Event::KeyPressed) {
+                // S/G: set start/goal (somente em célula walkable)
                 if (event.key.code == sf::Keyboard::S && hovered) {
-                    if (grid.isWalkable(*hovered)) start = *hovered;
+                    if (grid.isWalkable(*hovered)) {
+                        start = *hovered;
+                        last.reset();
+                    }
                 }
                 if (event.key.code == sf::Keyboard::G && hovered) {
-                    if (grid.isWalkable(*hovered)) goal = *hovered;
+                    if (grid.isWalkable(*hovered)) {
+                        goal = *hovered;
+                        last.reset();
+                    }
+                }
+
+                // Space: roda A*
+                if (event.key.code == sf::Keyboard::Space) {
+                    if (start && goal) {
+                        last = AStarPathfinder::findPath(grid, *start, *goal);
+                        if (last->success) {
+                            setTitle(window, "PATH FOUND | len=" + std::to_string(last->path.size()));
+                        } else {
+                            setTitle(window, "NO PATH (see explored nodes)");
+                        }
+                    } else {
+                        setTitle(window, "set START (S) and GOAL (G) first");
+                    }
+                }
+
+                // R: limpa só resultado (path + closed)
+                if (event.key.code == sf::Keyboard::R) {
+                    last.reset();
+                    setTitle(window, "result cleared");
+                }
+
+                // C: limpa o grid todo (obstáculos) + resultado
+                if (event.key.code == sf::Keyboard::C) {
+                    grid = GridMap(gridW, gridH);
+                    last.reset();
+                    setTitle(window, "grid cleared");
+                }
+
+                // Esc: fecha
+                if (event.key.code == sf::Keyboard::Escape) {
+                    window.close();
                 }
             }
         }
 
         window.clear(sf::Color::Black);
 
-        // desenha o grid
+        // 1) desenha o grid base (livre/obstáculo + hover)
         for (int y = 0; y < grid.height(); ++y) {
             for (int x = 0; x < grid.width(); ++x) {
                 Cell c{x, y};
 
-                // base (livre vs obstáculo)
-                if (grid.isBlocked(c)) {
-                    cellShape.setFillColor(sf::Color(60, 60, 60));
-                } else {
-                    cellShape.setFillColor(sf::Color(120, 120, 120));
-                }
+                if (grid.isBlocked(c)) cellShape.setFillColor(sf::Color(60, 60, 60));
+                else                   cellShape.setFillColor(sf::Color(120, 120, 120));
 
-                // start/goal por cima
-                if (start && c == *start) cellShape.setFillColor(sf::Color(0, 180, 0));
-                if (goal  && c == *goal)  cellShape.setFillColor(sf::Color(180, 0, 0));
-
-                // hover (um leve destaque, sem apagar start/goal)
-                if (hovered && c == *hovered && (!start || c != *start) && (!goal || c != *goal)) {
+                if (hovered && c == *hovered &&
+                    (!start || !(c == *start)) &&
+                    (!goal  || !(c == *goal))) {
                     cellShape.setFillColor(sf::Color(180, 180, 180));
                 }
 
-                cellShape.setPosition(static_cast<float>(x * cellSize),
-                                      static_cast<float>(y * cellSize));
+                cellShape.setPosition(static_cast<float>(x * kCellSize),
+                                      static_cast<float>(y * kCellSize));
                 window.draw(cellShape);
             }
+        }
+
+        // 2) overlay: explorados (closed) e path (se houver)
+        if (last) {
+            // explorados (closed) - azul
+            cellShape.setFillColor(sf::Color(40, 80, 160));
+            for (const auto& c : last->closed) {
+                cellShape.setPosition(static_cast<float>(c.x * kCellSize),
+                                      static_cast<float>(c.y * kCellSize));
+                window.draw(cellShape);
+            }
+
+            // caminho final (path) - amarelo
+            cellShape.setFillColor(sf::Color(220, 200, 0));
+            for (const auto& c : last->path) {
+                cellShape.setPosition(static_cast<float>(c.x * kCellSize),
+                                      static_cast<float>(c.y * kCellSize));
+                window.draw(cellShape);
+            }
+        }
+
+        // 3) start/goal por cima de tudo
+        if (start) {
+            cellShape.setFillColor(sf::Color(0, 180, 0));
+            cellShape.setPosition(static_cast<float>(start->x * kCellSize),
+                                  static_cast<float>(start->y * kCellSize));
+            window.draw(cellShape);
+        }
+        if (goal) {
+            cellShape.setFillColor(sf::Color(180, 0, 0));
+            cellShape.setPosition(static_cast<float>(goal->x * kCellSize),
+                                  static_cast<float>(goal->y * kCellSize));
+            window.draw(cellShape);
         }
 
         window.display();
