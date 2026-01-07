@@ -5,8 +5,6 @@
 #include "taikutsu/core/GridMap.h"
 #include "taikutsu/core/AStar.h"
 
-// Todo: lembrar de implementar o pincel pra pintar o grid aqui no main
-
 // Opção A: constante única (evita o warning do CLion)
 constexpr int kCellSize = 25;
 
@@ -39,13 +37,17 @@ int main() {
     std::optional<Cell> goal;
 
     std::optional<AStarResult> last;
+    bool painting = false;                 // LMB pressed
+    bool erasing  = false;                 // RMB pressed (opcional)
+    std::optional<Cell> lastPainted;       // evita repetir na mesma célula
+
 
     sf::RectangleShape cellShape(
         sf::Vector2f(static_cast<float>(kCellSize - 1),
                      static_cast<float>(kCellSize - 1))
     );
 
-    setTitle(window, "LMB obstacle | S start | G goal | Space run | R clear result | C clear grid");
+    setTitle(window, "LMB paint obstacle | S start | G goal | Space run | R clear result | C clear grid");
 
     while (window.isOpen()) {
         // célula sob o mouse (hover + comandos S/G)
@@ -55,18 +57,29 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) window.close();
 
-            // Clique esquerdo: toggle obstáculo
-            if (event.type == sf::Event::MouseButtonPressed &&
-                event.mouseButton.button == sf::Mouse::Left) {
-                if (hovered) {
-                    // não deixa bloquear start/goal por acidente
-                    if ((!start || !(*hovered == *start)) &&
-                        (!goal  || !(*hovered == *goal))) {
-                        grid.toggleBlocked(*hovered);
-                        last.reset(); // mapa mudou => invalida resultado antigo
-                    }
+            // mouse press/release: ativa/desativa pincel (paint)
+            if (event.type == sf::Event::MouseButtonPressed) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    painting = true;
+                    lastPainted.reset();
+                }
+                if (event.mouseButton.button == sf::Mouse::Right) { // opcional
+                    erasing = true;
+                    lastPainted.reset();
                 }
             }
+
+            if (event.type == sf::Event::MouseButtonReleased) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    painting = false;
+                    lastPainted.reset();
+                }
+                if (event.mouseButton.button == sf::Mouse::Right) { // opcional
+                    erasing = false;
+                    lastPainted.reset();
+                }
+            }
+
 
             // Teclas
             if (event.type == sf::Event::KeyPressed) {
@@ -114,6 +127,29 @@ int main() {
                 // Esc: fecha
                 if (event.key.code == sf::Keyboard::Escape) {
                     window.close();
+                }
+            }
+        }
+
+        // pincel (drag): pinta/apaga enquanto o botão estiver pressionado
+        if (hovered) {
+            const bool isStart = (start && (*hovered == *start));
+            const bool isGoal  = (goal  && (*hovered == *goal));
+
+            if (!isStart && !isGoal) {
+                if ((painting || erasing) && (!lastPainted || !(*hovered == *lastPainted))) {
+
+                    if (painting && !grid.isBlocked(*hovered)) {
+                        grid.setBlocked(*hovered, true);
+                        last.reset();
+                    }
+
+                    if (erasing && grid.isBlocked(*hovered)) { // opcional
+                        grid.setBlocked(*hovered, false);
+                        last.reset();
+                    }
+
+                    lastPainted = *hovered;
                 }
             }
         }
