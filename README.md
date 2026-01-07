@@ -1,22 +1,21 @@
 # Taikutsu — A* Pathfinding (SFML)
 
-Progetto d’esame: movimento su una mappa a griglia con algoritmo A* e visualizzazione tramite SFML.
+Exam project: grid-based movement using the A* pathfinding algorithm with SFML visualization.
 
-### Funzionalità
-* Griglia 2D con ostacoli modificabili
-* Definizione di Start/Goal
-* A* (4 direzioni) con euristica Manhattan
-* Debug visivo:
-    * nodi esplorati (CLOSED)
-    * percorso finale
-* Unit test (core)
+## Features
+* Editable 2D grid with obstacles
+* Start/Goal definition
+* A* pathfinding (4-directional) with Manhattan heuristic
+* Visual debugging:
+    * explored nodes (CLOSED set)
+    * final path
+* Unit tests (core)
 
-### Controlli
-* Mouse sinistro (trascina): disegnare ostacoli
-* Mouse destro (trascina): cancellare ostacoli (se abilitato)
-* `S`: impostare Start sulla cella sotto il mouse
-* `G`: impostare Goal sulla cella sotto il mouse
-* `Space`: eseguire A*
-* `R`: cancellare il risultato (percorso/nodi esplorati)
-* `C`: pulire la griglia (opzionale)
-* `esc`: uscire
+## Controls
+* Left mouse button (drag): paint obstacles
+* Right mouse button (drag): erase obstacles
+* `S`: set Start on the cell 
+* `G`: set Goal on the cell 
+* `Space`: run A*
+* `R`: clear result (path/explored nodes)
+* `C`: clear grid (optional)
