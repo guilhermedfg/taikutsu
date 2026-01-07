@@ -23,16 +23,20 @@ find_package(SFML 2 CONFIG REQUIRED COMPONENTS graphics window system)
 target_link_libraries(taikutsu_app PRIVATE sfml-graphics sfml-window sfml-system)
 
 # -----------------------------
-# Tests (Catch2)
-# -----------------------------
+# Tests (GoogleTest)
+# ---------------------------
 include(FetchContent)
 
 FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.5.4
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
 )
-FetchContent_MakeAvailable(Catch2)
+
+# compatibilidade
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
@@ -48,7 +52,10 @@ target_include_directories(taikutsu_tests PRIVATE
 
 target_compile_options(taikutsu_tests PRIVATE -Wall -Wextra -Wpedantic)
 
-target_link_libraries(taikutsu_tests PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(taikutsu_tests PRIVATE
+        GTest::gtest_main
+)
 
-add_test(NAME taikutsu_tests COMMAND taikutsu_tests)
+include(GoogleTest)
+gtest_discover_tests(taikutsu_tests)
 
