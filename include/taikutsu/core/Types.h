@@ -1,13 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#pragma once //preprocessor directive to prevent header files from being included multiple times
-
+//rappresenta una posizione (cella) sul grid con coordinate intere x,y
 struct Cell {
     int x{};
     int y{};
 };
 
+//paragona due celle
 inline bool operator==(const Cell& a, const Cell& b) {
     return a.x == b.x && a.y == b.y;
 }

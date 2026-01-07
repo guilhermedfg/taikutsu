@@ -5,6 +5,8 @@
 #include "taikutsu/core/GridMap.h"
 #include "taikutsu/core/AStar.h"
 
+// Todo: lembrar de implementar o pincel pra pintar o grid aqui no main
+
 // Opção A: constante única (evita o warning do CLion)
 constexpr int kCellSize = 25;
 
@@ -82,7 +84,7 @@ int main() {
                     }
                 }
 
-                // Space: roda A*
+                // space: roda A*
                 if (event.key.code == sf::Keyboard::Space) {
                     if (start && goal) {
                         last = AStarPathfinder::findPath(grid, *start, *goal);
