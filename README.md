@@ -20,3 +20,5 @@ Exam project: grid-based movement using the A* pathfinding algorithm with SFML v
 * `R`: clear result (path/explored nodes)
 * `C`: clear grid (optional)
 * `esc`: close/exit
+
+This project focuses on the path computation and visualization; the resulting path can be directly used to animate a character movement in a game context.
