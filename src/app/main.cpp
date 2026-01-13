@@ -5,7 +5,6 @@
 #include "taikutsu/core/GridMap.h"
 #include "taikutsu/core/AStar.h"
 
-// Opção A: constante única (evita o warning do CLion)
 constexpr int kCellSize = 25;
 
 static std::optional<Cell> mouseToCell(const sf::RenderWindow& window,

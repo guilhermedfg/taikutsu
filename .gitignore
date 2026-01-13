@@ -6,7 +6,7 @@ build/
 out/
 
 ############################
-# Compilados
+# Compilated
 ############################
 *.o
 *.obj
@@ -23,7 +23,7 @@ out/
 .vscode/
 
 ############################
-# Sistema Operacional
+# Sistema Operacional (OS)
 ############################
 # macOS
 .DS_Store

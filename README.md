@@ -19,3 +19,4 @@ Exam project: grid-based movement using the A* pathfinding algorithm with SFML v
 * `Space`: run A*
 * `R`: clear result (path/explored nodes)
 * `C`: clear grid (optional)
+* `esc`: close/exit

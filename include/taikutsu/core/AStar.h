@@ -6,13 +6,13 @@
 
 // risultato A*
 struct AStarResult {
-    // strada percorsa, da start fino a goal (if sucecess=false, no path)
-    std::vector<Cell> path;    // start -> goal (inclusive)
-    std::vector<Cell> closed;  // nós explorados (debug) útil para pintá-los
+    // Strada percorsa, da start fino a goal (if sucecess=false, no path)
+    std::vector<Cell> path;    //start -> goal (inclusive)
+    std::vector<Cell> closed;  //nodi esplorati (debug) utile per colorarli
     bool success{false}; //indica se ha trovato strada da percorrere
 };
 
-// Interfaccia A* (classe stateless, não guarda estado interno, só oferece função pura)
+// Interfaccia A* (classe stateless, non imagazzina stato interno, offre solo funzione pura)
 class AStarPathfinder {
 public:
     // Esegue A* sul grid, cercando strada tra start/goal

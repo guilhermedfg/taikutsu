@@ -1,6 +1,6 @@
 #include "taikutsu/core/GridMap.h"
 
-// costruisce grid HxW e inizializza tutte le celle come libere (false)
+// costruisce grid WxH e inizializza tutte le celle come libere (false)
 GridMap::GridMap(int width, int height)
     : w_(width), h_(height), blocked_(static_cast<size_t>(width * height), false) {}
 

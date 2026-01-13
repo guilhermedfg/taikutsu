@@ -10,13 +10,14 @@ namespace { //namespace anonimo, tutto è di uso interno di questo .cpp, evita c
     // usato per trovare velocemente i dati nelle strutture unordered_map e unordered_set (permettere ricerca veloce)
     struct CellHash {
         size_t operator()(const Cell& c) const noexcept {
-            // hash simples e suficiente pra grid pequeno/médio
+            // hash simples e suficiente pra grid pequeno/médio (combina dois inteiros c.x, c.y)
             return (static_cast<size_t>(c.x) << 32) ^ static_cast<size_t>(c.y);
         }
     };
 
+    //heuristics
     int manhattan(Cell a, Cell b) {
-        return std::abs(a.x - b.x) + std::abs(a.y - b.y); //abs : valore assoluto
+        return std::abs(a.x - b.x) + std::abs(a.y - b.y);
     }
 
     // ricostruisce la strada finale usando cameFrom (da goal a start)
@@ -53,8 +54,8 @@ namespace { //namespace anonimo, tutto è di uso interno di questo .cpp, evita c
     // return del nodo con valore di f minore
     struct PQCmp {
         bool operator()(const PQNode& a, const PQNode& b) const {
-            // priority_queue é max-heap por padrão; invertendo comparação vira min-heap por f
-            return a.f > b.f;
+            // priority_queue é max-heap por padrão(elemento maior no topo); invertendo comparação vira min-heap por f
+            return a.f > b.f; //return di f minore
         }
     };
 }
@@ -78,7 +79,7 @@ AStarResult AStarPathfinder::findPath(const GridMap& grid, Cell start, Cell goal
     //closed set: insieme di nodi già espansi (per evitare di espandere di nuovo)
     std::unordered_set<Cell, CellHash> closedSet;
 
-    //gScore[c] = miglior costo conosciuto da start fino a c
+    //gScore[c] = miglior costo conosciuto da start fino a c (current cell)
     std::unordered_map<Cell, int, CellHash> gScore;
 
     // cameFrom[child] = parent, per ricostruire la strada alla fine
@@ -88,38 +89,53 @@ AStarResult AStarPathfinder::findPath(const GridMap& grid, Cell start, Cell goal
     gScore[start] = 0; //il costo per arrivare da start partendo da start é 0
     open.push(PQNode{start, manhattan(start, goal), 0}); //mette start su open set
 
-    while (!open.empty()) { //continua mentre ci sono candidati sulla 'frontiera' open
-        PQNode current = open.top();
-        open.pop();
+    while (!open.empty()) { //continua mentre ci sono candidati sulla 'frontiera' open set
+        PQNode current = open.top(); //seleciona nó com menor f
+        open.pop(); //remove nó da fila pois ele vai ser processado.
 
-        // “skip” entradas desatualizadas, pois no decrease key (porque a gente empilha duplicados)
+        // “skip” entradas desatualizadas:
+        // Como std::priority_queue não tem decrease-key,
+        // quando encontramos um caminho melhor para uma célula,
+        // empilhamos um novo nó e deixamos o antigo na fila.
+        //Aqui verificamos se este é o melhor nó para essa célula
         auto itG = gScore.find(current.c);
         if (itG == gScore.end() || current.g != itG->second) continue;
 
+        //se a célula está no closed set, sem sentido explorar de novo
         if (closedSet.contains(current.c)) continue;
 
-        // marca como explorado
+        // marca current cell como explorada
         closedSet.insert(current.c);
-        result.closed.push_back(current.c);
+        result.closed.push_back(current.c); //pra debug/visualização
 
+        //se chegamos no objetivo
         if (current.c == goal) {
             result.success = true;
+            //reconstrói o caminho de goal até start
             result.path = reconstructPath(cameFrom, start, goal);
             return result;
         }
 
+        //explora os vizinhos em 4 direções
         for (Cell nb : grid.neighbors4(current.c)) {
-            if (closedSet.contains(nb)) continue;
+            if (closedSet.contains(nb)) continue; //ignora os já explorados
 
-            const int tentativeG = current.g + 1; // custo unitário
+            const int tentativeG = current.g + 1; // custo unitário de 1 por movimento aos 4 vizinhos
 
+            //verifica se:
+            //1. vizinho já não foi visitado, ou
+            //2. encontramos um caminho mais barato até ele
             auto it = gScore.find(nb);
             const bool better = (it == gScore.end()) || tentativeG < it->second;
 
             if (better) {
+                //atualiza melhor caminho conhecido até vizinho
                 cameFrom[nb] = current.c;
                 gScore[nb] = tentativeG;
+                // f = (custo real) g + heuristics (h)
                 const int f = tentativeG + manhattan(nb, goal);
+
+                // insere vizinho no open set como novo candidato a exploração
                 open.push(PQNode{nb, f, tentativeG});
             }
         }
