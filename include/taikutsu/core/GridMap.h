@@ -8,15 +8,18 @@
 //Qui rappresentiamo il nostro gridmap
 class GridMap {
 public:
-    GridMap(int width, int height); //larghezza x altezza dell'intero grid
+    GridMap(int width, int height); //larghezza x altezza dell'intero grid (ctor)
 
+    //getters
     int width() const { return w_; }
     int height() const { return h_; }
 
+    //controlli logici
     bool inBounds(Cell c) const;
     bool isBlocked(Cell c) const;
     bool isWalkable(Cell c) const { return inBounds(c) && !isBlocked(c); }
 
+    //modifica stato griglia
     void setBlocked(Cell c, bool blocked);
     void toggleBlocked(Cell c);
 
@@ -34,6 +37,7 @@ private:
     //idx = y * width + x
     // cada valor inteiro (1D) desse corresponde a uma dupla de células (x,y)
     // ex. blocked_ [13] = (3,2) -> idx=2*5+3 com (w_=5)
+    //transforma coordinate 2d in indice 1d
     int idx(Cell c) const { return c.y * w_ + c.x; }
 };
 

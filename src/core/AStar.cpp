@@ -39,7 +39,7 @@ namespace { //namespace anonimo, tutto è di uso interno di questo .cpp, evita c
             path.push_back(cur);
         }
 
-        std::reverse(path.begin(), path.end());
+        std::reverse(path.begin(), path.end()); //inverte ordem dos elementos em um intervalo
         return path;
     }
 
@@ -84,6 +84,7 @@ AStarResult AStarPathfinder::findPath(const GridMap& grid, Cell start, Cell goal
 
     // cameFrom[child] = parent, per ricostruire la strada alla fine
     std::unordered_map<Cell, Cell, CellHash> cameFrom;
+
 
 
     gScore[start] = 0; //il costo per arrivare da start partendo da start é 0
